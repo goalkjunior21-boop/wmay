@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Your Michel</title>
+
+  <style>
+    /* Reveal overlay */
+    .revealOverlay{
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(5,7,12,0.88);
+      backdrop-filter: blur(14px);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .revealBox{
+      width: min(640px, 100%);
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      border-radius: 18px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+      padding: 18px;
+    }
+    .scanTitle{
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      font-size: 18px;
+      margin: 0 0 10px;
+    }
+    .scanLine{
+      color: rgba(255,255,255,0.75);
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.4;
+      min-height: 44px;
+      white-space: pre-wrap;
+    }
+    .scanBar{
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      overflow: hidden;
+      margin-top: 14px;
+    }
+    .scanBar > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(255,255,255,0.45));
+      border-radius: 999px;
+      animation: scanFill 1400ms ease forwards;
+    }
+    @keyframes scanFill{
+      0%{ width: 0%; }
+      65%{ width: 83%; }
+      100%{ width: 100%; }
+    }
+
+    /* Reveal main content */
+    .hiddenBeforeReveal{ opacity: 0; transform: translateY(6px); }
+    .shownAfterReveal{ opacity: 1; transform: translateY(0px); transition: opacity 450ms ease, transform 450ms ease; }
+
+    /* Full breakdown bars */
+    .bars{
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .barRow{
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .barTop{
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: rgba(255,255,255,0.78);
+      font-size: 13px;
+    }
+    .barTop b{ color: rgba(255,255,255,0.92); }
+    .barTrack{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .barFill{
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.92), rgba(255,255,255,0.35));
+      transition: width 700ms ease;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Dramatic “calculating…” overlay -->
+  <div class="revealOverlay" id="revealOverlay">
+    <div class="revealBox">
+      <p class="scanTitle">Calculating your Michel…</p>
+      <p class="scanLine" id="scanLine"></p>
+      <div class="scanBar"><div></div></div>
+      <div class="small" style="margin-top:10px;">Do not refresh. The Michel distribution is fragile.</div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="shell hiddenBeforeReveal" id="mainContent">
+      <div class="topbar">
+        <div class="brand">
+          <div class="title">Result</div>
+          <div class="subtitle">it’s giving destiny</div>
+        </div>
+        <a class="pill" href="{{ url_for('reset') }}">Play again</a>
+      </div>
+
+      <div class="resultGrid">
+        <div class="card">
+          <h1 class="h1">You are: {{ winner.name }}</h1>
+          <p class="lead">{{ winner.tagline }}</p>
+
+          <div class="media">
+            {% if winner.media_type == "image" %}
+              <img src="{{ url_for('static', filename=winner.media) }}" alt="{{ winner.name }}">
+            {% else %}
+              <video controls autoplay muted loop playsinline>
+                <source src="{{ url_for('static', filename=winner.media) }}" type="video/mp4">
+              </video>
+            {% endif %}
+          </div>
+
+          <div class="kpi">
+            <div class="chip">Score: <b>{{ winner_score }}</b></div>
+            <div class="chip">Certified: <b>Michel-coded</b></div>
+            <div class="chip">Danger level: <b>high</b></div>
+          </div>
+
+          <div class="footerHint">Screenshot this and start arguments in group chats.</div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin:0 0 8px; letter-spacing:-0.02em;">Top 3 (closest matches)</h2>
+          <p class="small" style="margin-top:0;">If you’re mad, blame your answers.</p>
+          <ul class="top3">
+            {% for m, s, pct in top3 %}
+              <li><b>{{ m.name }}</b><span>{{ pct }}%</span></li>
+            {% endfor %}
+          </ul>
+
+          <div style="margin-top:16px;">
+            <h3 style="margin:0 0 8px;">Full Michel breakdown (all 20)</h3>
+            <div class="small">This is your entire Michel genome.</div>
+
+            <div class="bars" id="bars">
+              {% for m, s, pct in full %}
+                <div class="barRow" data-pct="{{ pct }}">
+                  <div class="barTop">
+                    <span><b>{{ m.name }}</b></span>
+                    <span>{{ pct }}%</span>
+                  </div>
+                  <div class="barTrack">
+                    <div class="barFill"></div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div class="small">
+              {% for k,v in traits.items() %}
+                {{ k }}={{ v }}{% if not loop.last %} • {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top:16px;">
+            <a class="btn" href="{{ url_for('reset') }}">Run it back</a>
+            <a class="btn" href="{{ url_for('home') }}">Home</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Typewriter-ish scan text
+    const lines = [
+      "Reading your vibe…",
+      "Checking camera roll damage…",
+      "Measuring cringe immunity…",
+      "Estimating fog tolerance…",
+      "Computing Michel genome…"
+    ];
+    const scanEl = document.getElementById("scanLine");
+    let i = 0;
+    let dots = 0;
+
+    const interval = setInterval(() => {
+      dots = (dots + 1) % 4;
+      scanEl.textContent = lines[i] + ".".repeat(dots);
+      if (dots === 0) i = (i + 1) % lines.length;
+    }, 180);
+
+    // Reveal after animation
+    setTimeout(() => {
+      clearInterval(interval);
+      document.getElementById("revealOverlay").style.display = "none";
+
+      const main = document.getElementById("mainContent");
+      main.classList.remove("hiddenBeforeReveal");
+      main.classList.add("shownAfterReveal");
+
+      // Animate bars to their % (cap at 100)
+      document.querySelectorAll(".barRow").forEach(row => {
+        const pct = Math.max(0, Math.min(100, parseFloat(row.dataset.pct)));
+        const fill = row.querySelector(".barFill");
+        // delay a bit for dramatic effect
+        setTimeout(() => { fill.style.width = pct + "%"; }, 120);
+      });
+    }, 1450);
+  </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Which Michel are you?</title>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand">
+          <div class="title">Which Michel are you?</div>
+          <div class="subtitle">choose wisely (or don’t)</div>
+        </div>
+        <div class="pill">Q {{ q_idx + 1 }} / {{ total }}</div>
+      </div>
+
+      <div class="card">
+        <div class="progress" aria-label="progress">
+          <div style="width: {{ ((q_idx + 1) * 100 / total) | round(0) }}%;"></div>
+        </div>
+
+        <div class="qtext">{{ question.text }}</div>
+
+        <form method="POST">
+          <div class="answers">
+            {% for opt in question.options %}
+              <label class="choice">
+                <input type="radio" name="option" value="{{ opt.key }}" required>
+                <div class="key">{{ opt.key }}</div>
+                <div class="label">{{ opt.text }}</div>
+              </label>
+            {% endfor %}
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" type="submit">Lock it in</button>
+            <div class="small">This answer will be used against you in court.</div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

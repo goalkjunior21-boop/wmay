@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Which Michel are you?</title>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand">
+          <div class="title">Which Michel are you?</div>
+          <div class="subtitle">unnecessarily accurate</div>
+        </div>
+        <div class="pill">{{ total_questions }} questions • no refunds</div>
+      </div>
+
+      <div class="card">
+        <h1 class="h1">Find your Michel.</h1>
+        <p class="lead">Answer honestly. Or lie and accept your fate.</p>
+
+        <div class="actions">
+          <form method="POST" style="margin:0;">
+            <button class="btn primary" type="submit">Start the chaos</button>
+          </form>
+          <div class="small">Tip: don’t overthink it (you will).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
