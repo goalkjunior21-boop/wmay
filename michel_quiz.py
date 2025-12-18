@@ -243,13 +243,27 @@ QUESTIONS: List[Question] = [
 # -------------------------
 # Scoring
 # -------------------------
-def michel_score(user_traits: Dict[str, int], michel: Michel) -> int:
-    score = 0
-    for t in TRAITS:
-        score += user_traits.get(t, 0) * michel.profile.get(t, 0)
-    return score
+import math
 
-def rank_michels(user_traits: Dict[str, int]) -> List[Tuple[Michel, int]]:
+def _norm(vec: Dict[str, int]) -> float:
+    return math.sqrt(sum((vec.get(t, 0) ** 2) for t in TRAITS))
+
+def _dot(a: Dict[str, int], b: Dict[str, int]) -> int:
+    return sum(a.get(t, 0) * b.get(t, 0) for t in TRAITS)
+
+def michel_score(user_traits: Dict[str, int], michel: Michel) -> float:
+    # Cosine similarity: dot(u, p) / (||u|| * ||p||)
+    # - prevents "Foggy/Hiker" dominating just because their profiles have huge weights
+    u_norm = _norm(user_traits)
+    p_norm = _norm(michel.profile)
+
+    if u_norm == 0 or p_norm == 0:
+        return 0.0
+
+    return _dot(user_traits, michel.profile) / (u_norm * p_norm)
+
+
+def rank_michels(user_traits: Dict[str, int]) -> List[Tuple[Michel, float]]:
     scored = [(m, michel_score(user_traits, m)) for m in MICHELS]
     scored.sort(key=lambda x: x[1], reverse=True)
     return scored
